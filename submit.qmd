@@ -1,28 +1,218 @@
 ---
-title: ""
-author: ""
+title: "Lab 3"
+author: "Adaeze Obinelo"
 format:
   html:
     embed-resources: true
+    code-fold: true
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
 ```{r}
-1 + 1
+library(lubridate)
+library(leaflet)
+library(magrittr)
+library(dplyr)
 ```
 
-You can add options to executable code like this
+# Step 1+2\--\> read the data
+
+There are 2377343 data points and 30 variables
 
 ```{r}
 #| echo: false
-2 * 2
+
+
+met <- data.table::fread(file.path("~", "Downloads", "met_all.gz")) 
+dim(met)
+head(met)
+tail(met)
+str(met)
+summary(met[,8:13])
+table(met$year)
+table(met$hour)
+table(met$month)
+summary(met$lat)
+summary(met$lon)
+summary(met$temp)
+summary(met$elev)
+summary(met$wind.sp)
+met[met$elev==9999.0] <- NA
+summary(met$elev)
+# this ^ gives us statistic summary of temp variabl
+
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+## Step 3
+
+```{r}
+#| echo: false
+str(met)
+```
+
+## Step 4
+
+```{r}
+#| echo: false
+
+summary(met[,8:13])
+table(met$year)
+table(met$hour)
+table(met$month)
+summary(met$lat)
+summary(met$lon)
+summary(met$temp)
+summary(met$elev)
+summary(met$wind.sp)
+met[met$elev==9999.0] <- NA
+summary(met$elev)
+elev <- met[elev==max(elev), ]
+summary(elev)
+
+```
+
+## Step 5
+
+```{r}
+#| echo: false
+
+mean(is.na(met$temp))
+
+
+met_ss <- met[met$temp == -40.00, c('hour', 'lat', 'lon', 'elev', 'wind.sp')]
+
+dim(met_ss)
+summary(met_ss)
+
+
+
+met <- met[met$temp != -40.00,]
+
+
+dim(met)
+summary(met)
+
+met <- met[order(met$temp)]
+summary(met$temp)
+summary(met)
+
+head(met)
+tail(met)
+head(met)[,c(1,8:10,24)]
+tail(met)[,c(1,8:10,24)]
+
+
+met_daily <- met[, .(
+  temp = mean(temp),
+  lat  = mean(lat),
+  lon  = mean(lon),
+  elev = mean(elev)
+), by = c("USAFID", "day")][order(temp)]
+head(met_daily)
+
+tail(met_daily)
+
+met_daily_dplyr <- met %>% 
+  group_by(USAFID, day) %>%
+  summarize(temp = mean(temp)) %>%
+  arrange(desc(temp))
+
+summary(met_daily_dplyr)
+
+head(met_daily_dplyr)
+tail(met_daily_dplyr)
+
+```
+
+## Step 6
+
+```{r}
+#| echo: false
+elev <- met[elev==max(elev), ]
+summary(elev)
+
+```
+
+## Step 7
+
+```{r}
+#| echo: false
+
+hist(met$temp, main = 'Histogram of Temperature Distribution', xlab = 'temp', col = "pink")
+
+boxplot(met$temp, main = 'Boxplot of temperature variable distribution', ylab = 'Temp', col = "pink")
+
+#library('devtools')
+#install_version('knitr' , version='1.42')
+met_stations <- (unique(met[,c("lat","lon")]))  
+dim(met_stations)
+
+
+
+leaflet(met_stations) %>% 
+  addProviderTiles('CartoDB.Positron') %>% 
+  addCircles(lat = ~lat, lng = ~lon, opacity = 1, fillOpacity = 1, radius = 400)
+
+#marking the maximum and min temperature with diff colors to a new map
+min <- met_daily[1] # first observation
+max <- met_daily[.N] #.N denotes the last observation
+
+```
+
+**Geographical Representation of Data**
+
+```{R}
+leaflet() %>% 
+  addProviderTiles('CartoDB.Positron') %>% 
+  addCircles(
+    data = min,
+    lat = ~lat, lng = ~lon, popup = "Min temp.",
+    opacity = 1, fillOpacity = 1, radius = 400, color = "blue"
+  ) %>%
+  addCircles(
+    data = max,
+    lat = ~lat, lng = ~lon, popup = "Max temp.",
+    opacity=1, fillOpacity=1, radius = 400, color = "red"
+  )
+
+```
+
+**Location of Recording from Highest Elevation**
+
+```{r}
+#| echo: false
+plot(met_daily$lat, main = 'Scatterplot of daily temp vs latitude', xlab = 'latitude', ylab = 'daily temp', met_daily$temp, pch=19, cex=0.5)
+mod <- lm(temp ~ lat, data = met_daily)
+
+abline(mod, col = "orange", lwd = 2)
+
+
+```
+
+```{r}
+
+#| echo: false
+elev <- met[elev==max(elev), ]
+summary(elev)
+
+leaflet(elev) %>%
+  addProviderTiles('OpenStreetMap') %>% 
+  addCircles(lat=~lat,lng=~lon, opacity=1, fillOpacity=1, radius=100)
+
+library(lubridate)
+elev$date <- with(elev, ymd_h(paste(year, month, day, hour, sep= ' ')))
+summary(elev$date)
+
+elev <- elev[order(date)]
+head(elev)
+
+plot(elev$date, elev$temp, main = 'Interrupted Time Series of Temp', xlab = 'date', ylab = 'temp', type='l')
+
+plot(elev$date, elev$wind.sp, Main = 'Interrupted Time Series of Windspeed', xlab= 'Date', ylab = 'Windspeed', type='l')
+
+```
+
+## Step 8
+
+1\. Who are the contributors on this dataset? I.e. can anyone contribute, or was data collected by research team
+
+2\. what was the purpose of this dataset?
