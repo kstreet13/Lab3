@@ -7,6 +7,13 @@ format:
     code-fold: true
 ---
 
+```{r}
+library(lubridate)
+library(leaflet)
+library(magrittr)
+library(dplyr)
+```
+
 # Step 1+2\--\> read the data
 
 There are 2377343 data points and 30 variables
@@ -69,25 +76,21 @@ summary(elev)
 #| echo: false
 
 mean(is.na(met$temp))
-#tell us whether or not a particular value is NA i.e. about 2.5% of temperature values are missing
+
 
 met_ss <- met[met$temp == -40.00, c('hour', 'lat', 'lon', 'elev', 'wind.sp')]
-# creates new dataset called 'met_ss' use square brackets to subset, c means create a vector (pulls out columns) of specified variables 
+
 dim(met_ss)
 summary(met_ss)
 
-# we think -40 observations are probably not real, so we want to get rid of them
-# will subset again to make new set without them
-# will call it 'met' to override original met dataset
+
 
 met <- met[met$temp != -40.00,]
-# double equal sign means 'equals' != means 'not equal to
+
 
 dim(met)
 summary(met)
-#look at new dataset met
 
-# if you do met temp procedure in console first, you'll get an idea of how things will be ordered--> itll give u integers
 met <- met[order(met$temp)]
 summary(met$temp)
 summary(met)
@@ -96,7 +99,7 @@ head(met)
 tail(met)
 head(met)[,c(1,8:10,24)]
 tail(met)[,c(1,8:10,24)]
-# the c makes a vector again --> we are only pulling these variables; see str func to find out which variables r which
+
 
 met_daily <- met[, .(
   temp = mean(temp),
@@ -108,16 +111,10 @@ head(met_daily)
 
 tail(met_daily)
 
-library(magrittr)
-library(dplyr)
 met_daily_dplyr <- met %>% 
   group_by(USAFID, day) %>%
   summarize(temp = mean(temp)) %>%
   arrange(desc(temp))
-
-# use %>% to "pipe"--> express a string of multiple operations; need magrittr package to use this version of pipe
-# that's why i put that in first
-# also need dplyr function to use arrange lol so i added that next
 
 summary(met_daily_dplyr)
 
@@ -130,7 +127,6 @@ tail(met_daily_dplyr)
 
 ```{r}
 #| echo: false
-
 elev <- met[elev==max(elev), ]
 summary(elev)
 
@@ -141,17 +137,16 @@ summary(elev)
 ```{r}
 #| echo: false
 
-hist(met$temp, col = "pink")
-boxplot(met$temp, col = "pink")
+hist(met$temp, main = 'Histogram of Temperature Distribution', xlab = 'temp', col = "pink")
+
+boxplot(met$temp, main = 'Boxplot of temperature variable distribution', ylab = 'Temp', col = "pink")
+
 #library('devtools')
 #install_version('knitr' , version='1.42')
-# first, need to make dataset of unique lon and lats, call it met stations
 met_stations <- (unique(met[,c("lat","lon")]))  
 dim(met_stations)
-#unique variables for lat and long^
 
-#use leaflet function
-library(leaflet)
+
 
 leaflet(met_stations) %>% 
   addProviderTiles('CartoDB.Positron') %>% 
@@ -161,6 +156,11 @@ leaflet(met_stations) %>%
 min <- met_daily[1] # first observation
 max <- met_daily[.N] #.N denotes the last observation
 
+```
+
+**Geographical Representation of Data**
+
+```{R}
 leaflet() %>% 
   addProviderTiles('CartoDB.Positron') %>% 
   addCircles(
@@ -179,39 +179,25 @@ leaflet() %>%
 ```{r}
 
 #| echo: false
-plot(met_daily$lat, met_daily$temp, pch=19, cex=0.5)
-# plot met daily lat x, against y of temp variable
-# pch denotes the fill of the dot, default is one, which is just outline of circye
-# cex gives the size, can make bigger or smaller points by adjusting this; 1 is baseline)
-
-# can add simple linear regression using lm function
+plot(met_daily$lat, main = 'Scatterplot of daily temp vs latitude', xlab = 'latitude', ylab = 'daily temp', met_daily$temp, pch=19, cex=0.5)
 mod <- lm(temp ~ lat, data = met_daily)
-#making new data mod', from met daily data; format 'x' ~ 'y' --> model x variable based on y variable
-# for us, this is temp by x
-# can type in mod in console at the bottom to see the form of this line + coefficients
 
 abline(mod, col = "orange", lwd = 2)
-
-# abline func makes a line, needs slope and intercept
-# when we ggive it the mod data, it can find the slope and intercept itself
-# lwd = line width
 
 
 ```
 
-```{r}
-#| echo: false
+Location of Recording from Highest Elevation
 
+```{r}
+
+#| echo: false
 elev <- met[elev==max(elev), ]
 summary(elev)
 
 leaflet(elev) %>%
   addProviderTiles('OpenStreetMap') %>% 
   addCircles(lat=~lat,lng=~lon, opacity=1, fillOpacity=1, radius=100)
-```
-
-```{r}
-#| echo: false
 
 library(lubridate)
 elev$date <- with(elev, ymd_h(paste(year, month, day, hour, sep= ' ')))
@@ -220,9 +206,10 @@ summary(elev$date)
 elev <- elev[order(date)]
 head(elev)
 
-plot(elev$date, elev$temp, type='l')
+plot(elev$date, elev$temp, main = 'Interrupted Time Series of Temp', xlab = 'date', ylab = 'temp', type='l')
 
-plot(elev$date, elev$wind.sp, type='l')
+plot(elev$date, elev$wind.sp, Main = 'Interrupted Time Series of Windspeed', xlab= 'Date', ylab = 'Windspeed', type='l')
+
 ```
 
 ## Step 8
