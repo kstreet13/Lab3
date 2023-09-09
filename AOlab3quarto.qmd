@@ -215,4 +215,5 @@ plot(elev$date, elev$wind.sp, Main = 'Interrupted Time Series of Windspeed', xla
 
 1\. Who are the contributors on this dataset? I.e. can anyone contribute, or was data collected by research team
 
+
 2\. what was the purpose of this dataset?
