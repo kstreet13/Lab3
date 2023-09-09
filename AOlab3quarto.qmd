@@ -176,8 +176,9 @@ leaflet() %>%
 
 ```
 
-```{r}
+**Location of Recording from Highest Elevation**
 
+```{r}
 #| echo: false
 plot(met_daily$lat, main = 'Scatterplot of daily temp vs latitude', xlab = 'latitude', ylab = 'daily temp', met_daily$temp, pch=19, cex=0.5)
 mod <- lm(temp ~ lat, data = met_daily)
@@ -186,8 +187,6 @@ abline(mod, col = "orange", lwd = 2)
 
 
 ```
-
-Location of Recording from Highest Elevation
 
 ```{r}
 
