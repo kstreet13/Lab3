@@ -4,6 +4,7 @@ author: "Adaeze Obinelo"
 format:
   html:
     embed-resources: true
+    code-fold: true
 ---
 
 # Step 1+2\--\> read the data
@@ -12,7 +13,8 @@ There are 2377343 data points and 30 variables
 
 ```{r}
 #| echo: false
-2 * 2
+
+
 met <- data.table::fread(file.path("~", "Downloads", "met_all.gz")) 
 dim(met)
 head(met)
@@ -31,14 +33,12 @@ met[met$elev==9999.0] <- NA
 summary(met$elev)
 # this ^ gives us statistic summary of temp variabl
 
-
 ```
 
 ## Step 3
 
 ```{r}
 #| echo: false
-2 * 2
 str(met)
 ```
 
@@ -46,7 +46,7 @@ str(met)
 
 ```{r}
 #| echo: false
-2 * 2
+
 summary(met[,8:13])
 table(met$year)
 table(met$hour)
@@ -60,13 +60,13 @@ met[met$elev==9999.0] <- NA
 summary(met$elev)
 elev <- met[elev==max(elev), ]
 summary(elev)
+
 ```
 
 ## Step 5
 
 ```{r}
 #| echo: false
-2 * 2
 
 mean(is.na(met$temp))
 #tell us whether or not a particular value is NA i.e. about 2.5% of temperature values are missing
@@ -130,16 +130,17 @@ tail(met_daily_dplyr)
 
 ```{r}
 #| echo: false
-2 * 2
+
 elev <- met[elev==max(elev), ]
 summary(elev)
+
 ```
 
 ## Step 7
 
 ```{r}
 #| echo: false
-2 * 2
+
 hist(met$temp, col = "pink")
 boxplot(met$temp, col = "pink")
 #library('devtools')
@@ -176,6 +177,8 @@ leaflet() %>%
 ```
 
 ```{r}
+
+#| echo: false
 plot(met_daily$lat, met_daily$temp, pch=19, cex=0.5)
 # plot met daily lat x, against y of temp variable
 # pch denotes the fill of the dot, default is one, which is just outline of circye
@@ -194,24 +197,22 @@ abline(mod, col = "orange", lwd = 2)
 # lwd = line width
 
 
-
 ```
 
 ```{r}
 #| echo: false
-2 * 2
+
 elev <- met[elev==max(elev), ]
 summary(elev)
 
 leaflet(elev) %>%
   addProviderTiles('OpenStreetMap') %>% 
   addCircles(lat=~lat,lng=~lon, opacity=1, fillOpacity=1, radius=100)
-
 ```
 
 ```{r}
 #| echo: false
-2 * 2
+
 library(lubridate)
 elev$date <- with(elev, ymd_h(paste(year, month, day, hour, sep= ' ')))
 summary(elev$date)
@@ -230,6 +231,3 @@ plot(elev$date, elev$wind.sp, type='l')
 
 
 2\. what was the purpose of this dataset?
-
-```{}
-```
